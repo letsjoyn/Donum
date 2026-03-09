@@ -12,17 +12,17 @@ INSERT INTO organizations (org_name, type, country, address, phone, email, websi
 ('Ministry of Social Welfare', 'Government', 'India', 'Shastri Bhawan, New Delhi 110001', '+91-11-23384444', 'welfare@gov.in', NULL);
 
 -- 2. Users (Passwords are BCrypt hashed. All demo passwords = the text before @)
--- admin123 -> $2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy
--- donor123 -> $2a$10$dDJ3SW6p7b2GOIBkKmFGbOKEKsQYM1OMSHhvONJP.51VEgCp9HhoO
--- vol123   -> $2a$10$rI9kTTk5Z0MbDOkYnzN7kOuM1TdNlPEpOdoZqMvqwCN6vqLDEgP1e
+-- admin123 -> $2a$10$VyeNG5boD5hxljAn7l4DJ.7Gk7z7xyg93hON9sKvZlx0HFW4k.4Eu
+-- donor123 -> $2a$10$wDzfGgmqRXfw5Oj1cq4Ml.t/IY4JKdgSWOv0wQusmIQaWM/g12IMy
+-- vol123   -> $2a$10$m4Nosno.Bp1l.nBZCupIhu6gSmbTci3wSB54TYkIRpSyAGlLzZ7Ru
 INSERT INTO users (org_id, username, password_hash, email, role, full_name, phone) VALUES
-(1, 'admin',     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'admin@donum.org',     'Admin',     'Priya Sharma',     '+91-9876543210'),
-(1, 'donor1',    '$2a$10$dDJ3SW6p7b2GOIBkKmFGbOKEKsQYM1OMSHhvONJP.51VEgCp9HhoO', 'rajesh.k@gmail.com',     'Donor',     'Rajesh Kumar',     '+91-9876501234'),
-(1, 'donor2',    '$2a$10$dDJ3SW6p7b2GOIBkKmFGbOKEKsQYM1OMSHhvONJP.51VEgCp9HhoO', 'anita.m@yahoo.com',      'Donor',     'Anita Menon',      '+91-9988776655'),
-(1, 'vol1',      '$2a$10$rI9kTTk5Z0MbDOkYnzN7kOuM1TdNlPEpOdoZqMvqwCN6vqLDEgP1e', 'suresh.v@donum.org',  'Volunteer', 'Suresh Verma',     '+91-8765432109'),
-(1, 'vol2',      '$2a$10$rI9kTTk5Z0MbDOkYnzN7kOuM1TdNlPEpOdoZqMvqwCN6vqLDEgP1e', 'meera.d@donum.org',   'Volunteer', 'Meera Deshpande',  '+91-7654321098'),
-(2, 'globaladmin','$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'admin@globalrelief.org', 'Admin',     'John Mitchell',    '+1-202-555-0151'),
-(NULL, 'donor_public', '$2a$10$dDJ3SW6p7b2GOIBkKmFGbOKEKsQYM1OMSHhvONJP.51VEgCp9HhoO', 'sarah.j@email.com', 'Donor', 'Sarah Johnson', '+1-555-0199');
+(1, 'admin',     '$2a$10$VyeNG5boD5hxljAn7l4DJ.7Gk7z7xyg93hON9sKvZlx0HFW4k.4Eu', 'admin@donum.org',     'Admin',     'Priya Sharma',     '+91-9876543210'),
+(1, 'donor1',    '$2a$10$wDzfGgmqRXfw5Oj1cq4Ml.t/IY4JKdgSWOv0wQusmIQaWM/g12IMy', 'rajesh.k@gmail.com',     'Donor',     'Rajesh Kumar',     '+91-9876501234'),
+(1, 'donor2',    '$2a$10$FnBEHGV2QMUTl6ByCKv9tOa.1qgIKVT4DeilAwnoZMUnWgDai8YUG', 'anita.m@yahoo.com',      'Donor',     'Anita Menon',      '+91-9988776655'),
+(1, 'vol1',      '$2a$10$m4Nosno.Bp1l.nBZCupIhu6gSmbTci3wSB54TYkIRpSyAGlLzZ7Ru', 'suresh.v@donum.org',  'Volunteer', 'Suresh Verma',     '+91-8765432109'),
+(1, 'vol2',      '$2a$10$PD1qok8W4LgYvSbtcFT1PeRJDAKJq0hat02/mas5pmmKbORBv2/XO', 'meera.d@donum.org',   'Volunteer', 'Meera Deshpande',  '+91-7654321098'),
+(2, 'globaladmin','$2a$10$chY8COUGEczLbc9kIoUjfe1v4LnOFaQaPpKMbQWLHZVkjymlOexam', 'admin@globalrelief.org', 'Admin',     'John Mitchell',    '+1-202-555-0151'),
+(NULL, 'donor_public', '$2a$10$pZpLJ/LZq/0ZyXB2tOoZd.6CgFPH5Kd.S0LD24DpA3qbYLRf97kky', 'sarah.j@email.com', 'Donor', 'Sarah Johnson', '+1-555-0199');
 
 -- 3. Campaigns
 INSERT INTO campaigns (org_id, name, description, target_amount, raised_amount, start_date, end_date, status) VALUES
