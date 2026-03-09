@@ -13,7 +13,7 @@ public class DBUtil {
         HikariConfig config = new HikariConfig();
         config.setJdbcUrl("jdbc:mysql://localhost:3306/ngo_db?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8");
         config.setUsername("root");
-        config.setPassword("password"); // Change to your DB password
+        config.setPassword("joeroot123");
         config.setDriverClassName("com.mysql.cj.jdbc.Driver");
 
         // Pool tuning

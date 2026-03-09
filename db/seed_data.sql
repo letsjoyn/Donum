@@ -4,6 +4,7 @@
 USE ngo_db;
 
 -- 1. Organizations
+
 INSERT INTO organizations (org_name, type, country, address, phone, email, website) VALUES
 ('Donum Foundation', 'NGO', 'India', '42 MG Road, Bengaluru, Karnataka 560001', '+91-80-12345678', 'contact@donum.org', 'https://donum.org'),
 ('Global Relief Network', 'NGO', 'United States', '1200 18th St NW, Washington DC 20036', '+1-202-555-0150', 'info@globalrelief.org', 'https://globalrelief.org'),

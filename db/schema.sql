@@ -372,31 +372,3 @@ JOIN organizations o ON c.org_id = o.org_id
 LEFT JOIN donations d ON c.campaign_id = d.campaign_id
 LEFT JOIN requirements r ON c.campaign_id = r.campaign_id
 GROUP BY c.campaign_id;
-        GROUP_CONCAT(DISTINCT d.item_name SEPARATOR ', ') as items_donated,
-        SUM(CASE WHEN d.status = 'Delivered' THEN 1 ELSE 0 END) as successful_impacts
-    FROM users u
-    LEFT JOIN donations d ON u.user_id = d.donor_id
-    WHERE u.user_id = p_donor_id
-    GROUP BY u.user_id;
-END;
-//
-DELIMITER ;
-
--- 9. View: Live Needs (Gap Analysis)
-CREATE OR REPLACE VIEW live_needs AS
-SELECT 
-    r.location,
-    r.item_name,
-    r.quantity_needed,
-    COALESCE(i.quantity, 0) as stock_available,
-    (r.quantity_needed - COALESCE(i.quantity, 0)) as gap,
-    r.urgency
-FROM requirements r
-LEFT JOIN inventory i ON r.item_name = i.item_name
-WHERE r.status != 'Fulfilled';
-
--- Sample Data Initial Users
-INSERT INTO users (username, password, email, role, full_name) VALUES 
-('admin', 'admin123', 'admin@ngo.org', 'Admin', 'NGO Administrator'),
-('donor1', 'donor123', 'donor@example.com', 'Donor', 'John Doe'),
-('vol1', 'vol123', 'volunteer@ngo.org', 'Volunteer', 'Sam Smith');

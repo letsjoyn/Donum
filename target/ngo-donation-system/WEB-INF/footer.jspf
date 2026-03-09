@@ -1,0 +1,29 @@
+    </main>
+    <footer>
+        <div class="footer-content">
+            <div class="footer-brand">
+                <h3><i class="fas fa-hands-holding-heart"></i> Donum</h3>
+                <p>Connecting donors, volunteers, and communities worldwide for transparent and accountable relief distribution.</p>
+            </div>
+            <div class="footer-links">
+                <div class="footer-col">
+                    <h4>Platform</h4>
+                    <a href="campaigns.jsp">Active Campaigns</a>
+                    <a href="#">How It Works</a>
+                    <a href="#">Impact Reports</a>
+                </div>
+                <div class="footer-col">
+                    <h4>Connect</h4>
+                    <a href="#"><i class="fab fa-github"></i> GitHub</a>
+                    <a href="#"><i class="fab fa-linkedin"></i> LinkedIn</a>
+                    <a href="#"><i class="fas fa-envelope"></i> Contact</a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 Donum. Built with purpose. <strong>Accountability. Transparency. Impact.</strong></p>
+        </div>
+    </footer>
+    <script src="js/app.js"></script>
+</body>
+</html>

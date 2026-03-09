@@ -3,6 +3,7 @@ package com.ngo.servlet;
 import com.ngo.model.User;
 import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.*;
+import com.itextpdf.text.pdf.draw.LineSeparator;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;

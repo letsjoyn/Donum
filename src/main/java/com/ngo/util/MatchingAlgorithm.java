@@ -6,7 +6,6 @@ import com.ngo.model.InventoryItem;
 import com.ngo.model.Requirement;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class MatchingAlgorithm {
 
