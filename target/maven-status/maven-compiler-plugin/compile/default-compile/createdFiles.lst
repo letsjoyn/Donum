@@ -25,6 +25,7 @@ com\ngo\servlet\RequirementServlet.class
 com\ngo\model\Organization.class
 com\ngo\model\Donation.class
 com\ngo\model\User.class
+com\ngo\servlet\ChatServlet.class
 com\ngo\servlet\LogoutServlet.class
 com\ngo\swing\AdminDashboard$2.class
 com\ngo\servlet\RegisterServlet.class
