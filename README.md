@@ -556,7 +556,7 @@ Security Headers Added:
 
 | Class | Purpose | Details |
 |-------|---------|---------|
-| `DBUtil` | Database connection management | HikariCP pool: 15 max connections, 5 min idle, 30s connection timeout, statement caching (250), leak detection (60s) |
+| `DBUtil` | Database connection management | Loads `db.properties` (or `NGO_DB_*` env vars); HikariCP pool: 15 max connections, 5 min idle, 30s connection timeout |
 | `PasswordUtil` | Password security | `hashPassword(plain)` → BCrypt hash with 10 rounds. `checkPassword(plain, hash)` → verification |
 | `MatchingAlgorithm` | AI distribution planning | See [Section 9](#9-ai-matching-algorithm) for full details |
 
@@ -733,6 +733,7 @@ donum/
 │
 ├── pom.xml                              # Maven build config, all dependencies
 ├── README.md                            # This document
+├── .gitignore                           # Ignores target/, db.properties, IDE files
 ├── ER_Diagram.md                        # Entity-relationship diagram
 │
 ├── db/
@@ -741,6 +742,9 @@ donum/
 │   └── advanced_queries.sql             # 7 complex queries (CTEs, window functions)
 │
 └── src/main/
+    ├── resources/
+    │   ├── db.properties.example        # Copy to db.properties (local, gitignored)
+    │   └── db.properties                # Your MySQL password (create locally, not in git)
     ├── java/com/ngo/
     │   ├── model/                       # 9 POJOs (data classes)
     │   │   ├── User.java
@@ -814,42 +818,140 @@ donum/
 
 ### Prerequisites
 
-- Java 11 or higher (JDK)
-- Apache Maven 3.6+
-- MySQL 8.0+
-- Apache Tomcat 9.x or 10.x
+| Tool | Version |
+|------|---------|
+| **JDK** | 11+ |
+| **Maven** | 3.6+ |
+| **MySQL** | 8.0+ |
+| **Apache Tomcat** | 9.x or 10.x |
 
-### Step-by-Step
+Verify installs:
 
 ```bash
-# 1. Clone/download the project
-cd college-major-project-4sem
-
-# 2. Create MySQL database
-mysql -u root -p
-> CREATE DATABASE ngo_db;
-> USE ngo_db;
-> SOURCE db/schema.sql;
-> SOURCE db/seed_data.sql;
-> EXIT;
-
-# 3. Configure database credentials
-#    Edit: src/main/java/com/ngo/util/DBUtil.java
-#    Update JDBC_URL, USERNAME, PASSWORD to match your MySQL setup
-
-# 4. Build with Maven
-mvn clean package
-
-# 5. Deploy to Tomcat
-#    Copy target/ngo-donation-system-2.0.war to TOMCAT_HOME/webapps/
-
-# 6. Start Tomcat
-#    Windows: TOMCAT_HOME/bin/startup.bat
-#    Linux:   TOMCAT_HOME/bin/startup.sh
-
-# 7. Open browser
-#    http://localhost:8080/ngo-donation-system-2.0/
+java -version
+mvn -version
+mysql --version
 ```
+
+### Quick start (clone → run)
+
+```bash
+# 1. Clone the repo
+git clone https://github.com/letsjoyn/Donum.git
+cd Donum
+
+# 2. Create and seed the database (use your MySQL root password when prompted)
+mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS ngo_db;"
+mysql -u root -p ngo_db < db/schema.sql
+mysql -u root -p ngo_db < db/seed_data.sql
+
+# 3. Configure database credentials (required — do NOT skip)
+cp src/main/resources/db.properties.example src/main/resources/db.properties
+# Edit db.properties and set jdbc.password to YOUR local MySQL password
+
+# 4. Build
+mvn clean package
+```
+
+**Windows (PowerShell)** — same steps, different copy command:
+
+```powershell
+git clone https://github.com/letsjoyn/Donum.git
+cd Donum
+
+mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS ngo_db;"
+Get-Content db\schema.sql | mysql -u root -p ngo_db
+Get-Content db\seed_data.sql | mysql -u root -p ngo_db
+
+Copy-Item src\main\resources\db.properties.example src\main\resources\db.properties
+# Open db.properties and set jdbc.password
+
+mvn clean package
+```
+
+### Database configuration (fixes “password” / login errors)
+
+After cloning, the app **does not** ship with a working MySQL password. Each developer must create a local config file:
+
+| File | Purpose |
+|------|---------|
+| `src/main/resources/db.properties.example` | Template (committed) |
+| `src/main/resources/db.properties` | Your local credentials (**gitignored**) |
+
+Example `db.properties`:
+
+```properties
+jdbc.url=jdbc:mysql://localhost:3306/ngo_db?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8
+jdbc.username=root
+jdbc.password=your_mysql_password_here
+```
+
+**Alternative:** environment variables (optional, override the file):
+
+| Variable | Example |
+|----------|---------|
+| `NGO_DB_URL` | `jdbc:mysql://localhost:3306/ngo_db?...` |
+| `NGO_DB_USER` | `root` |
+| `NGO_DB_PASSWORD` | your MySQL password |
+
+Rebuild after changing credentials: `mvn clean package`
+
+### Deploy on Tomcat
+
+`TOMCAT_HOME` in older docs was a **placeholder** — use your real Tomcat install path (e.g. `D:\apache-tomcat-9.0.115` or `/opt/tomcat`).
+
+```bash
+# Copy the WAR (artifact name from pom.xml <finalName>)
+cp target/ngo-donation-system.war /path/to/tomcat/webapps/
+```
+
+**Windows (PowerShell):**
+
+```powershell
+$env:CATALINA_HOME = "D:\apache-tomcat-9.0.115"   # change to your Tomcat path
+Copy-Item target\ngo-donation-system.war "$env:CATALINA_HOME\webapps\" -Force
+& "$env:CATALINA_HOME\bin\startup.bat"
+```
+
+**Linux / macOS:**
+
+```bash
+export CATALINA_HOME=/opt/tomcat   # change to your Tomcat path
+cp target/ngo-donation-system.war "$CATALINA_HOME/webapps/"
+"$CATALINA_HOME/bin/startup.sh"
+```
+
+### Open the app
+
+```
+http://localhost:8080/ngo-donation-system/
+```
+
+Login page: `http://localhost:8080/ngo-donation-system/login`
+
+> **Note:** The context path is `ngo-donation-system` (not `ngo-donation-system-2.0`). It matches the WAR filename without `.war`.
+
+### Troubleshooting
+
+| Problem | Fix |
+|---------|-----|
+| **Invalid username or password** on demo accounts (`admin` / `admin123`) | Usually MySQL connection failed. Set `db.properties`, ensure MySQL is running, re-run `seed_data.sql`, rebuild and redeploy the WAR. |
+| **Access denied for user 'root'@'localhost'** | Wrong `jdbc.password` in `db.properties`. |
+| **`db.properties` missing** | Copy from `db.properties.example` and set your password. |
+| **404 on Tomcat** | WAR must be named `ngo-donation-system.war`; URL must include `/ngo-donation-system/`. |
+| **`CATALINA_HOME is not defined`** (Windows) | Set `$env:CATALINA_HOME` to your Tomcat folder before `startup.bat`. |
+| **Charts empty on admin dashboard** | DB connected but views empty — confirm `seed_data.sql` ran without errors. |
+
+### Desktop app (optional)
+
+Uses the same `db.properties` / env vars as the web app:
+
+```bash
+mvn compile
+java -cp "target/classes;target/ngo-donation-system/WEB-INF/lib/*" com.ngo.swing.MainApp
+```
+
+On Linux/macOS, use `:` instead of `;` in the classpath.
 
 ---
 
