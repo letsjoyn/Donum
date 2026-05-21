@@ -13,7 +13,7 @@ public class DBUtil {
     private static final HikariDataSource dataSource;
 
     private static final String DEFAULT_JDBC_URL =
-            "jdbc:mysql://localhost:3306/ngo_db?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8";
+            "jdbc:mysql://localhost:3306/ngo_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8";
     private static final String DEFAULT_USERNAME = "root";
 
     static {

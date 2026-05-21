@@ -881,7 +881,7 @@ After cloning, the app **does not** ship with a working MySQL password. Each dev
 Example `db.properties`:
 
 ```properties
-jdbc.url=jdbc:mysql://localhost:3306/ngo_db?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8
+jdbc.url=jdbc:mysql://localhost:3306/ngo_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8
 jdbc.username=root
 jdbc.password=your_mysql_password_here
 ```
@@ -941,6 +941,7 @@ Login page: `http://localhost:8080/ngo-donation-system/login`
 | **404 on Tomcat** | WAR must be named `ngo-donation-system.war`; URL must include `/ngo-donation-system/`. |
 | **`CATALINA_HOME is not defined`** (Windows) | Set `$env:CATALINA_HOME` to your Tomcat folder before `startup.bat`. |
 | **Charts empty on admin dashboard** | DB connected but views empty — confirm `seed_data.sql` ran without errors. |
+| **500 error / Public Key Retrieval is not allowed** | Add `allowPublicKeyRetrieval=true` to `jdbc.url` in `db.properties` (included in `db.properties.example`), then `mvn clean package` and redeploy. |
 
 ### Desktop app (optional)
 
