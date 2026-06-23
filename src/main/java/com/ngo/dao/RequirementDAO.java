@@ -90,4 +90,16 @@ public class RequirementDAO {
         }
         return 0;
     }
+
+    public boolean deleteRequirement(int requirementId) {
+        String sql = "DELETE FROM requirements WHERE requirement_id = ?";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, requirementId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }

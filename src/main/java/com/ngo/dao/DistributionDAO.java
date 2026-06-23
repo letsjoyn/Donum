@@ -113,4 +113,73 @@ public class DistributionDAO {
         }
         return 0;
     }
+
+    /**
+     * Deletes a distribution and reverses inventory / requirement updates from trg_after_distribution_insert.
+     */
+    public boolean deleteDistribution(int logId) {
+        try (Connection conn = DBUtil.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                double qty = 0;
+                int requirementId = 0;
+                String itemName = null;
+
+                String fetchSql = "SELECT dl.quantity_distributed, dl.requirement_id, r.item_name " +
+                        "FROM distribution_log dl JOIN requirements r ON dl.requirement_id = r.requirement_id " +
+                        "WHERE dl.log_id = ?";
+                try (PreparedStatement ps = conn.prepareStatement(fetchSql)) {
+                    ps.setInt(1, logId);
+                    ResultSet rs = ps.executeQuery();
+                    if (!rs.next()) {
+                        conn.rollback();
+                        return false;
+                    }
+                    qty = rs.getDouble("quantity_distributed");
+                    requirementId = rs.getInt("requirement_id");
+                    itemName = rs.getString("item_name");
+                }
+
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "UPDATE inventory SET quantity = quantity + ? WHERE item_name = ?")) {
+                    ps.setDouble(1, qty);
+                    ps.setString(2, itemName);
+                    ps.executeUpdate();
+                }
+
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "UPDATE requirements SET quantity_fulfilled = GREATEST(quantity_fulfilled - ?, 0), " +
+                        "status = CASE " +
+                        "  WHEN GREATEST(quantity_fulfilled - ?, 0) >= quantity_needed THEN 'Fulfilled' " +
+                        "  WHEN GREATEST(quantity_fulfilled - ?, 0) > 0 THEN 'Partially Met' " +
+                        "  ELSE 'Pending' END " +
+                        "WHERE requirement_id = ?")) {
+                    ps.setDouble(1, qty);
+                    ps.setDouble(2, qty);
+                    ps.setDouble(3, qty);
+                    ps.setInt(4, requirementId);
+                    ps.executeUpdate();
+                }
+
+                try (PreparedStatement ps = conn.prepareStatement("DELETE FROM distribution_log WHERE log_id = ?")) {
+                    ps.setInt(1, logId);
+                    if (ps.executeUpdate() <= 0) {
+                        conn.rollback();
+                        return false;
+                    }
+                }
+
+                conn.commit();
+                return true;
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }

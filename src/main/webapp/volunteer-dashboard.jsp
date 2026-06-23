@@ -14,12 +14,20 @@
                 DistributionDAO distDao = new DistributionDAO();
                 List<DistributionLog> myDist = distDao.getDistributionsByVolunteer(user.getUserId());
                     request.setAttribute("myDist", myDist);
+
+                DonationDAO donationDao = new DonationDAO();
+                List<Donation> recentDonations = donationDao.getRecentDonations(15);
+                request.setAttribute("recentDonations", recentDonations);
+
+                InventoryDAO inventoryDao = new InventoryDAO();
+                List<InventoryItem> inventory = inventoryDao.getAllInventory();
+                request.setAttribute("inventory", inventory);
                     %>
 
                     <div class="page-header">
                         <h1><i class="fas fa-truck"></i> Volunteer Dispatch Center</h1>
                         <p>Log field distributions and track your impact, ${fn:escapeXml(sessionScope.user.fullName)}.
-                        </p>
+                            Refresh this page to see new donations and stock from donors.</p>
                     </div>
 
                     <!-- Stats -->
@@ -129,6 +137,92 @@
                                     </div>
                                 </c:otherwise>
                             </c:choose>
+                        </div>
+                    </div>
+
+                    <!-- Incoming donations (from donors) -->
+                    <div class="glass-card" style="margin-top:1.5rem;">
+                        <h3 class="section-title"><i class="fas fa-gift"></i> Recent Donations (from donors)</h3>
+                        <p style="color:var(--text-dim,#94a3b8);font-size:0.9rem;margin-bottom:1rem;">
+                            When donors give goods, MySQL trigger <code>trg_after_donation_insert</code> adds stock to
+                            inventory automatically.</p>
+                        <div class="scroll-area">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Donor</th>
+                                        <th>Type</th>
+                                        <th>Item / Amount</th>
+                                        <th>Campaign</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <c:forEach var="don" items="${recentDonations}">
+                                        <tr>
+                                            <td>
+                                                <fmt:formatDate value="${don.donationDate}" pattern="dd MMM yyyy" />
+                                            </td>
+                                            <td>${fn:escapeXml(don.donorName)}</td>
+                                            <td><span class="badge badge-${fn:toLowerCase(don.type)}">${don.type}</span>
+                                            </td>
+                                            <td>
+                                                <c:choose>
+                                                    <c:when test="${don.type == 'Kind'}">
+                                                        ${fn:escapeXml(don.itemName)} × ${don.amountOrQuantity}</c:when>
+                                                    <c:otherwise>₹<fmt:formatNumber value="${don.amountOrQuantity}"
+                                                            maxFractionDigits="0" /></c:otherwise>
+                                                </c:choose>
+                                            </td>
+                                            <td>${empty don.campaignName ? '—' : fn:escapeXml(don.campaignName)}</td>
+                                        </tr>
+                                    </c:forEach>
+                                    <c:if test="${empty recentDonations}">
+                                        <tr>
+                                            <td colspan="5" class="empty-state">
+                                                <p>No donations yet.</p>
+                                            </td>
+                                        </tr>
+                                    </c:if>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Warehouse stock (updated by triggers) -->
+                    <div class="glass-card" style="margin-top:1.5rem;">
+                        <h3 class="section-title"><i class="fas fa-boxes"></i> Available Inventory</h3>
+                        <div class="scroll-area">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Item</th>
+                                        <th>Qty</th>
+                                        <th>Warehouse</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <c:forEach var="item" items="${inventory}">
+                                        <tr>
+                                            <td><strong>${fn:escapeXml(item.itemName)}</strong></td>
+                                            <td>${item.quantity} ${fn:escapeXml(item.unit)}</td>
+                                            <td>${fn:escapeXml(item.warehouseName)}</td>
+                                            <td>
+                                                <c:choose>
+                                                    <c:when test="${item.stockStatus == 'CRITICAL' || item.stockStatus == 'OUT_OF_STOCK'}">
+                                                        <span class="badge badge-critical">${item.stockStatus}</span>
+                                                    </c:when>
+                                                    <c:when test="${item.stockStatus == 'LOW'}">
+                                                        <span class="badge badge-high">${item.stockStatus}</span>
+                                                    </c:when>
+                                                    <c:otherwise><span class="badge badge-low">OK</span></c:otherwise>
+                                                </c:choose>
+                                            </td>
+                                        </tr>
+                                    </c:forEach>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
 

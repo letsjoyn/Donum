@@ -40,9 +40,28 @@
                                             <!-- Page Header -->
                                             <div class="page-header">
                                                 <h1><i class="fas fa-shield-alt"></i> Admin Control Center</h1>
-                                                <p>Welcome back, ${fn:escapeXml(sessionScope.user.fullName)}. Here's
-                                                    your system overview.</p>
+                                                <p>Welcome back, ${fn:escapeXml(sessionScope.user.fullName)}. Data is
+                                                    loaded live from MySQL on every page refresh.</p>
                                             </div>
+
+                                            <c:if test="${param.deleted == 'donation'}">
+                                                <div class="alert alert-success"><i class="fas fa-check-circle"></i>
+                                                    Donation deleted. Inventory and campaign totals were adjusted in the
+                                                    database.</div>
+                                            </c:if>
+                                            <c:if test="${param.deleted == 'requirement'}">
+                                                <div class="alert alert-success"><i class="fas fa-check-circle"></i>
+                                                    Requirement deleted from the database.</div>
+                                            </c:if>
+                                            <c:if test="${param.deleted == 'distribution'}">
+                                                <div class="alert alert-success"><i class="fas fa-check-circle"></i>
+                                                    Distribution deleted. Stock and requirement fulfillment were reversed.
+                                                </div>
+                                            </c:if>
+                                            <c:if test="${param.error == 'delete_failed'}">
+                                                <div class="alert alert-error"><i class="fas fa-exclamation-circle"></i>
+                                                    Could not delete that record. It may already be removed.</div>
+                                            </c:if>
 
                                             <!-- Stats Grid -->
                                             <div class="stats-grid">
@@ -79,6 +98,20 @@
                                                 </div>
                                             </div>
 
+                                            <div style="display:flex;justify-content:flex-end;margin-bottom:1rem;gap:0.75rem;flex-wrap:wrap;">
+                                                <button type="button" id="refreshChartsBtn" class="btn-primary"
+                                                    style="padding:0.5rem 1rem;">
+                                                    <i class="fas fa-sync-alt"></i> Refresh Charts
+                                                </button>
+                                                <a href="admin-dashboard.jsp" class="btn-primary"
+                                                    style="padding:0.5rem 1rem;text-decoration:none;background:rgba(255,255,255,0.08);">
+                                                    <i class="fas fa-redo"></i> Reload Page (stats + tables)
+                                                </a>
+                                            </div>
+                                            <p style="color:#94a3b8;font-size:0.85rem;margin:-0.5rem 0 1rem 0;">
+                                                Charts load live from MySQL. After a donor donates, click <strong>Refresh
+                                                    Charts</strong> or reload this page.</p>
+
                                             <!-- Charts Row -->
                                             <div class="content-grid" style="margin-bottom: 1.5rem;">
                                                 <div class="glass-card">
@@ -106,6 +139,84 @@
                                                         Progress</h3>
                                                     <div class="chart-container"><canvas id="chartCampaigns"></canvas>
                                                     </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- All Donations (live from DB) -->
+                                            <div class="glass-card" style="margin-bottom: 1.5rem;">
+                                                <h3 class="section-title"><i class="fas fa-hand-holding-heart"></i> All
+                                                    Donations <span class="role-badge role-donor"
+                                                        style="margin-left:0.5rem;">${fn:length(donations)} records</span>
+                                                </h3>
+                                                <p style="color:var(--text-dim,#94a3b8);font-size:0.9rem;margin-bottom:1rem;">
+                                                    New donor registrations and donations appear here after you refresh
+                                                    this page. In-kind gifts also update <strong>Inventory</strong> via
+                                                    database trigger.</p>
+                                                <div class="scroll-area">
+                                                    <table>
+                                                        <thead>
+                                                            <tr>
+                                                                <th>ID</th>
+                                                                <th>Date</th>
+                                                                <th>Donor</th>
+                                                                <th>Type</th>
+                                                                <th>Item / Amount</th>
+                                                                <th>Campaign</th>
+                                                                <th>Status</th>
+                                                                <th>Action</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <c:forEach var="don" items="${donations}">
+                                                                <tr>
+                                                                    <td>#${don.donationId}</td>
+                                                                    <td>
+                                                                        <fmt:formatDate value="${don.donationDate}"
+                                                                            pattern="dd MMM yyyy HH:mm" />
+                                                                    </td>
+                                                                    <td>${fn:escapeXml(don.donorName)}</td>
+                                                                    <td><span
+                                                                            class="badge badge-${fn:toLowerCase(don.type)}">${don.type}</span>
+                                                                    </td>
+                                                                    <td>
+                                                                        <c:choose>
+                                                                            <c:when test="${don.type == 'Kind'}">
+                                                                                ${fn:escapeXml(don.itemName)} ×
+                                                                                ${don.amountOrQuantity}</c:when>
+                                                                            <c:otherwise>₹<fmt:formatNumber
+                                                                                    value="${don.amountOrQuantity}"
+                                                                                    maxFractionDigits="0" /></c:otherwise>
+                                                                        </c:choose>
+                                                                    </td>
+                                                                    <td>${empty don.campaignName ? 'General' : fn:escapeXml(don.campaignName)}</td>
+                                                                    <td><span
+                                                                            class="badge badge-${fn:toLowerCase(don.status)}">${don.status}</span>
+                                                                    </td>
+                                                                    <td>
+                                                                        <form action="admin/delete" method="post"
+                                                                            style="display:inline;"
+                                                                            onsubmit="return confirm('Delete donation #${don.donationId}? This reverses inventory/campaign totals.');">
+                                                                            <input type="hidden" name="entity"
+                                                                                value="donation" />
+                                                                            <input type="hidden" name="id"
+                                                                                value="${don.donationId}" />
+                                                                            <button type="submit" class="btn-danger"
+                                                                                style="padding:0.35rem 0.65rem;font-size:0.8rem;">
+                                                                                <i class="fas fa-trash"></i> Delete
+                                                                            </button>
+                                                                        </form>
+                                                                    </td>
+                                                                </tr>
+                                                            </c:forEach>
+                                                            <c:if test="${empty donations}">
+                                                                <tr>
+                                                                    <td colspan="8" class="empty-state">
+                                                                        <p>No donations in database yet.</p>
+                                                                    </td>
+                                                                </tr>
+                                                            </c:if>
+                                                        </tbody>
+                                                    </table>
                                                 </div>
                                             </div>
 
@@ -170,6 +281,7 @@
                                                                     <th>Needed</th>
                                                                     <th>Urgency</th>
                                                                     <th>Campaign</th>
+                                                                    <th>Action</th>
                                                                 </tr>
                                                             </thead>
                                                             <tbody>
@@ -183,11 +295,25 @@
                                                                                 class="badge badge-${fn:toLowerCase(r.urgency)}">${r.urgency}</span>
                                                                         </td>
                                                                         <td>${fn:escapeXml(r.campaignName)}</td>
+                                                                        <td>
+                                                                            <form action="admin/delete" method="post"
+                                                                                style="display:inline;"
+                                                                                onsubmit="return confirm('Delete this requirement?');">
+                                                                                <input type="hidden" name="entity"
+                                                                                    value="requirement" />
+                                                                                <input type="hidden" name="id"
+                                                                                    value="${r.requirementId}" />
+                                                                                <button type="submit" class="btn-danger"
+                                                                                    style="padding:0.35rem 0.65rem;font-size:0.8rem;">
+                                                                                    <i class="fas fa-trash"></i>
+                                                                                </button>
+                                                                            </form>
+                                                                        </td>
                                                                     </tr>
                                                                 </c:forEach>
                                                                 <c:if test="${empty reqs}">
                                                                     <tr>
-                                                                        <td colspan="5" class="empty-state">
+                                                                        <td colspan="6" class="empty-state">
                                                                             <p>No pending requirements.</p>
                                                                         </td>
                                                                     </tr>
@@ -315,6 +441,7 @@
                                                                     <th>Location</th>
                                                                     <th>Item</th>
                                                                     <th>Qty</th>
+                                                                    <th>Action</th>
                                                                 </tr>
                                                             </thead>
                                                             <tbody>
@@ -328,11 +455,25 @@
                                                                         <td>${fn:escapeXml(d.location)}</td>
                                                                         <td>${fn:escapeXml(d.itemName)}</td>
                                                                         <td>${d.quantityDistributed}</td>
+                                                                        <td>
+                                                                            <form action="admin/delete" method="post"
+                                                                                style="display:inline;"
+                                                                                onsubmit="return confirm('Delete this distribution? Stock will be restored.');">
+                                                                                <input type="hidden" name="entity"
+                                                                                    value="distribution" />
+                                                                                <input type="hidden" name="id"
+                                                                                    value="${d.logId}" />
+                                                                                <button type="submit" class="btn-danger"
+                                                                                    style="padding:0.35rem 0.65rem;font-size:0.8rem;">
+                                                                                    <i class="fas fa-trash"></i>
+                                                                                </button>
+                                                                            </form>
+                                                                        </td>
                                                                     </tr>
                                                                 </c:forEach>
                                                                 <c:if test="${empty recent}">
                                                                     <tr>
-                                                                        <td colspan="5" class="empty-state">
+                                                                        <td colspan="6" class="empty-state">
                                                                             <p>No distributions yet.</p>
                                                                         </td>
                                                                     </tr>

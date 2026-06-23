@@ -19,6 +19,11 @@ public class UserDAO {
         u.setRole(rs.getString("role"));
         u.setFullName(rs.getString("full_name"));
         u.setPhone(rs.getString("phone"));
+        u.setAddress(rs.getString("address"));
+        u.setAvatarUrl(rs.getString("avatar_url"));
+        if (rs.getTimestamp("last_login") != null) {
+            u.setLastLogin(rs.getTimestamp("last_login"));
+        }
         u.setActive(rs.getBoolean("is_active"));
         u.setCreatedAt(rs.getTimestamp("created_at"));
         return u;
@@ -87,17 +92,32 @@ public class UserDAO {
     }
 
     public boolean updateProfile(User user) {
-        String sql = "UPDATE users SET full_name = ?, email = ?, phone = ? WHERE user_id = ?";
+        String sql = "UPDATE users SET full_name = ?, email = ?, phone = ?, address = ? WHERE user_id = ?";
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, user.getFullName());
             ps.setString(2, user.getEmail());
             ps.setString(3, user.getPhone());
-            ps.setInt(4, user.getUserId());
+            ps.setString(4, user.getAddress());
+            ps.setInt(5, user.getUserId());
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
+        }
+    }
+
+    /** True if another user (not userId) already uses this email. */
+    public boolean emailExistsForOtherUser(String email, int userId) {
+        String sql = "SELECT 1 FROM users WHERE email = ? AND user_id != ?";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, email);
+            ps.setInt(2, userId);
+            return ps.executeQuery().next();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return true;
         }
     }
 

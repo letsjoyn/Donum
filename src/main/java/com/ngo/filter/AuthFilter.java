@@ -49,7 +49,7 @@ public class AuthFilter implements Filter {
 
         // Role-based access control
         String role = user.getRole();
-        if (path.startsWith("/admin") && !"Admin".equals(role)) {
+        if ((path.startsWith("/admin") || path.contains("admin-dashboard")) && !"Admin".equals(role)) {
             response.sendRedirect(request.getContextPath() + "/" + role.toLowerCase() + "-dashboard.jsp");
             return;
         }

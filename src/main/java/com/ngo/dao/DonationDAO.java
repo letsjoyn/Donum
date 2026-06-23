@@ -109,4 +109,89 @@ public class DonationDAO {
         }
         return 0;
     }
+
+    public List<Donation> getRecentDonations(int limit) {
+        List<Donation> list = new ArrayList<>();
+        String sql = "SELECT d.*, u.full_name AS donor_name, c.name AS campaign_name FROM donations d " +
+                     "JOIN users u ON d.donor_id = u.user_id " +
+                     "LEFT JOIN campaigns c ON d.campaign_id = c.campaign_id " +
+                     "ORDER BY d.donation_date DESC LIMIT ?";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, limit);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Donation d = mapRow(rs);
+                d.setDonorName(rs.getString("donor_name"));
+                d.setCampaignName(rs.getString("campaign_name"));
+                list.add(d);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    private Donation findById(Connection conn, int donationId) throws SQLException {
+        String sql = "SELECT * FROM donations WHERE donation_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, donationId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) return mapRow(rs);
+        }
+        return null;
+    }
+
+    /**
+     * Deletes a donation and reverses trigger side-effects (inventory / campaign totals).
+     */
+    public boolean deleteDonation(int donationId) {
+        try (Connection conn = DBUtil.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                Donation d = findById(conn, donationId);
+                if (d == null) {
+                    conn.rollback();
+                    return false;
+                }
+
+                if ("Kind".equals(d.getType()) && d.getItemName() != null) {
+                    try (PreparedStatement ps = conn.prepareStatement(
+                            "UPDATE inventory SET quantity = GREATEST(quantity - ?, 0) WHERE item_name = ?")) {
+                        ps.setDouble(1, d.getAmountOrQuantity());
+                        ps.setString(2, d.getItemName());
+                        ps.executeUpdate();
+                    }
+                }
+
+                if ("Cash".equals(d.getType()) && d.getCampaignId() != null) {
+                    try (PreparedStatement ps = conn.prepareStatement(
+                            "UPDATE campaigns SET raised_amount = GREATEST(raised_amount - ?, 0) WHERE campaign_id = ?")) {
+                        ps.setDouble(1, d.getAmountOrQuantity());
+                        ps.setInt(2, d.getCampaignId());
+                        ps.executeUpdate();
+                    }
+                }
+
+                try (PreparedStatement ps = conn.prepareStatement("DELETE FROM donations WHERE donation_id = ?")) {
+                    ps.setInt(1, donationId);
+                    if (ps.executeUpdate() <= 0) {
+                        conn.rollback();
+                        return false;
+                    }
+                }
+
+                conn.commit();
+                return true;
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }

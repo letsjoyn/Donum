@@ -27,6 +27,7 @@
                     <a href="volunteer-dashboard.jsp" class="nav-link"><i class="fas fa-truck"></i> Field Ops</a>
                 </c:if>
                 <a href="campaigns.jsp" class="nav-link"><i class="fas fa-bullhorn"></i> Campaigns</a>
+                <a href="profile" class="nav-link"><i class="fas fa-user-edit"></i> Profile</a>
                 <div class="nav-user">
                     <span class="user-badge"><i class="fas fa-user-circle"></i> ${sessionScope.user.fullName}</span>
                     <span class="role-badge role-${fn:toLowerCase(sessionScope.user.role)}">${sessionScope.user.role}</span>

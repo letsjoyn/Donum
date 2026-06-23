@@ -52,6 +52,7 @@
         </div>
     </div>
 
+    <script>window.DONUM_CONTEXT = '${pageContext.request.contextPath}';</script>
     <script src="js/app.js"></script>
     <script>
     function toggleChat() {
